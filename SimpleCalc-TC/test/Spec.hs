@@ -1,2 +1,12 @@
+
+import Test.Tasty
+import Test.Tasty.HUnit
+
+import ParserTest
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do
+  defaultMain (testGroup "Library tests" tests)
+    where
+      tests = ParserTest.tests
+
