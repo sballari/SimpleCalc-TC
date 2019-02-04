@@ -16,14 +16,19 @@ module Inference where
      G is a set of subgoals [TAssertion] "premesse di una regola"
      E is a set of constraints on the type variables
     -}
-    inference :: Term -> [TConstraint] -> [TAssertion] -> [TConstraint]
-    inference m e [] = e -- no goals, i have done. E is the final constraints lists
-    inference m e (g:gs) = let (pr,cons) = fst (app (actionsTable g) 0) in inference m (cons++e) (pr++gs)
+    freshN :: ST Int
+    freshN = S(\s-> (s,s+1))
+    inference :: Term -> [TConstraint] -> [TAssertion] -> ST (Maybe ([TConstraint]))
+    -- l'algoritmo fallisce se nel contesto non e' presente una variabile
+    inference m e [] = return (Just e) -- no goals, i have done. E is the final constraints lists
+    inference m e (g:gs) = do  
+                                mr <- actionsTable g
+                                case mr of 
+                                    Just (pr,cons) -> inference m (cons++e) (pr++gs)
+                                    Nothing -> return Nothing
+                                
 
 
-    
-    
-    
     type State = Int
     newtype ST a = S (State -> (a,State))
     app :: ST a -> State -> (a,State)
@@ -40,21 +45,23 @@ module Inference where
         sta >>= f = S (\s -> let (a,s') = app sta s in app (f a) s')
     
 
-
     fresh :: ST Type 
     fresh = S(\s->( (TVar('t':(show s))) ,s+1))
 
-    actionsTable :: TAssertion -> ST ([TAssertion],[TConstraint])
-
-    -- actionsTable (a, EVar x, t) = let Maybe r = (lookup x a)  in  ([],[TEq t  r])
-    actionsTable (a, ENum n, t) = return ([], [TEq t TNat])
-    actionsTable (a, EBool b, t) = return ([], [TEq t  TBool])
-    actionsTable (a, ESum t1 t2, t) = return ( [(a,t1,TNat), (a,t1,TNat)], [TEq t TNat])
-    actionsTable (a, EMin t1 t2, t) = return ( [(a,t1, TNat), (a,t1,TNat)], [TEq t TNat])
-    actionsTable (a, ECond t1 t2 t3, t) = return ([(a,t1, TBool), (a,t2,t), (a,t3,t)], [])
+    actionsTable :: TAssertion -> ST (Maybe ([TAssertion],[TConstraint]))
+        -- l'algoritmo fallisce se c'e' una variabile libera (fallisce Evar)
+        -- lo ST pattern e' usato per avere type varibili fresche.
+    actionsTable (a, EVar x, t) = return (do tx <- lookup x a; Just ([],[TEq t tx]))
+        
+        --let tx = (lookup x a)  in (Just ([],[TEq t tx])) -- leggo dal contesto e metto il vincolo
+    actionsTable (a, ENum n, t) = return (Just ([], [TEq t TNat]))  
+    actionsTable (a, EBool b, t) = return (Just ([], [TEq t  TBool]))
+    actionsTable (a, ESum t1 t2, t) = return (Just ( [(a,t1,TNat), (a,t1,TNat)], [TEq t TNat]))
+    actionsTable (a, EMin t1 t2, t) = return (Just ( [(a,t1, TNat), (a,t1,TNat)], [TEq t TNat]))
+    actionsTable (a, ECond t1 t2 t3, t) = return (Just ([(a,t1, TBool), (a,t2,t), (a,t3,t)], []))
     actionsTable (a, EAp t1 t2, t) = do 
                                         n1 <- fresh 
                                         n2 <- fresh
-                                        return ([(a,t1, (TArrow n1 n2 )), (a,t2,n1)], [TEq t n2])
-    actionsTable (a, (Efn var s1 m), t) = return ([(a++[(var,s1)], m, t)], [])
+                                        return (Just ([(a,t1, (TArrow n1 n2 )), (a,t2,n1)], [TEq t n2]))
+    actionsTable (a, (Efn var s1 m), t) = return (Just ([(a++[(var,s1)], m, t)], []))
    
