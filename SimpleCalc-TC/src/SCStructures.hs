@@ -13,5 +13,5 @@ module SCStructures where
         deriving (Show, Eq)
 
     data Type =
-        TBool | TNat | TArrow Type Type 
+        TBool | TNat | TArrow Type Type |TVar String
         deriving (Show, Eq)
