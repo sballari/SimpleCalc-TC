@@ -16,8 +16,10 @@ module Inference where
      G is a set of subgoals [TAssertion] "premesse di una regola"
      E is a set of constraints on the type variables
     -}
-    freshN :: ST Int
-    freshN = S(\s-> (s,s+1))
+    inference' :: Term -> Maybe ([TConstraint])
+    inference' m = fst (app (inference m [] [([],m,(TVar "r"))]) 0)
+
+
     inference :: Term -> [TConstraint] -> [TAssertion] -> ST (Maybe ([TConstraint]))
     -- l'algoritmo fallisce se nel contesto non e' presente una variabile
     inference m e [] = return (Just e) -- no goals, i have done. E is the final constraints lists
@@ -52,8 +54,7 @@ module Inference where
         -- l'algoritmo fallisce se c'e' una variabile libera (fallisce Evar)
         -- lo ST pattern e' usato per avere type varibili fresche.
     actionsTable (a, EVar x, t) = return (do tx <- lookup x a; Just ([],[TEq t tx]))
-        
-        --let tx = (lookup x a)  in (Just ([],[TEq t tx])) -- leggo dal contesto e metto il vincolo
+    -- leggo dal contesto e metto il vincolo
     actionsTable (a, ENum n, t) = return (Just ([], [TEq t TNat]))  
     actionsTable (a, EBool b, t) = return (Just ([], [TEq t  TBool]))
     actionsTable (a, ESum t1 t2, t) = return (Just ( [(a,t1,TNat), (a,t1,TNat)], [TEq t TNat]))
