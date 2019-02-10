@@ -29,7 +29,7 @@ module InferenceTest (tests) where
             expected = Nothing
             result = typeOfExe ( ESum (EVar "x") (ENum 3))
 
-    test5  = testCase "Inf2: if 4 true 4" (assertEqual "" expected result)
+    test5  = testCase "Inf5: if 4 true 4" (assertEqual "" expected result)
         where 
             expected = Just TBool
             result = typeOfExe (ECond (ENum 4)(EBool True)(ENum 4))
