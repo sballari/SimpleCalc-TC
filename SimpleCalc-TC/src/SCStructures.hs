@@ -18,11 +18,11 @@ module SCStructures where
 
     instance Ord Type where
         --subtyping checker
-        _ <= Top = True
-        TNat <= TBool = True
-        TArrow s1 s2  <= TArrow t1 t2 = (t1 <= s1) && (s2 <=t2)
-        _ <= _ = False
+        _ < Top = True
+        TNat < TBool = True
+        TArrow s1 s2  < TArrow t1 t2 = (t1 < s1) && (s2 <t2)
+        _ < _ = False
 
-        s < t = s<=t && s/=t
+        s <= t = s<t || s==t
         s > t = t < s 
         s >= t = t <= s
