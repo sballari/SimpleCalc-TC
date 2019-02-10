@@ -6,9 +6,6 @@ module InferenceTest (tests) where
 
     tests = [test1,test2,test3, test4,test5]
 
-    typeOfExe :: Term -> Maybe Type
-    typeOfExe t = fst (app (typeOf [] t) [])
-
     test1  = testCase "Inf1: sum" (assertEqual "" expected result)
         where 
             expected = Just TNat

@@ -1,31 +1,16 @@
 module Inference where 
     import SCStructures
+    import STPattern
 
     type Contest = [(VName, Type)] -- Contest
-    type Error = [String]
 
-    newtype ST a = ST (Error -> (a,Error))
-    app :: ST a -> Error -> (a,Error)
-    app (ST sta) s = sta s
-
-    instance Functor ST where 
-        fmap g st = ST (\s-> let (x,s')= app st s in (g x, s'))
-    instance Applicative ST where
-        pure x = ST (\s -> (x,s))
-        stf <*> sta = ST (\s-> 
-            let (f,s')= app stf s 
-                (x,s'')= app sta s' in (f x , s'') )
-    instance Monad ST where
-        sta >>= f = ST (\s -> let (a,s') = app sta s in app (f a) s')
-
-
-    enrichError :: String -> ST ()
-    enrichError err = ST(\e-> ((),e++[err]))
-
+    typeOfExe :: Term -> Maybe Type
+    typeOfExe t = fst (app (typeOf [] t) [])
+    
     typeOf :: Contest -> Term -> ST (Maybe Type)
     typeOf ctx (EVar x) =
             let mtx = lookup x ctx in      
-            if mtx == Nothing then enrichError ("var "++x++"not in the context") >>= (\x -> return Nothing)
+            if mtx == Nothing then enrichError ("var "++x++" not in the context") >>= (\x -> return Nothing)
             else return mtx    
             
     typeOf ctx (Efn x s term) = do  mt <- typeOf ((x,s):ctx) term 
@@ -71,22 +56,7 @@ module Inference where
     typeOf ctx (EBool b) = return (Just TBool)
     typeOf ctx (ENum n) = return (Just TNat)
 
-    lub :: Type -> Type -> Maybe Type 
-    lub TBool TBool = Just TBool
-    lub TNat TNat = Just TNat
-    lub TNat TBool = Just TBool -- added
-    lub TBool TNat = Just TBool -- added
-    lub (TArrow s1 s2) (TArrow t1 t2) = pure(TArrow) <*> glb s1 t1 <*> lub s2 t2 
-    lub _ _ = Just Top
-
-    glb :: Type -> Type -> Maybe Type 
-    glb Top t = Just t 
-    glb TNat TBool = Just TNat --added
-    glb TBool TNat = Just TNat --added
-    glb TBool TBool = Just TBool
-    glb TNat TNat = Just TNat
-    glb (TArrow s1 s2) (TArrow t1 t2) = pure(TArrow) <*> lub s1 t1 <*> glb s2 t2 
-    glb _ _ = Nothing
+    
 
     
 
