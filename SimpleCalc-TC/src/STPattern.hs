@@ -1,4 +1,5 @@
 module STPattern where
+
     type Error = [String]
 
     newtype ST a = ST (Error -> (a,Error))
@@ -16,5 +17,4 @@ module STPattern where
         sta >>= f = ST (\s -> let (a,s') = app sta s in app (f a) s')
 
 
-    enrichError :: String -> ST ()
-    enrichError err = ST(\e-> ((),e++[err]))
+    

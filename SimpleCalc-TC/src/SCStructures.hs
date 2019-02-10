@@ -13,7 +13,7 @@ module SCStructures where
         deriving (Show, Eq)
 
     data Type =
-        TBool | TNat | TArrow Type Type | Top | TVar String
+        TBool | TNat | TArrow Type Type | Top
         deriving (Show, Eq)
 
     instance Ord Type where
