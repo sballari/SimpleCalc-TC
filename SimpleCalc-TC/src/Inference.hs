@@ -35,16 +35,21 @@ module Inference where
     
     typeOf ctx (ECond bexp m1 m2) = 
         do 
+            mb <- typeOf ctx bexp
             mt1 <- typeOf ctx m1
             mt2 <- typeOf ctx m2
-            case mt1 of 
-                Nothing -> enrichError ("first branch typing error") 
-                Just t1 -> case mt2 of 
-                                Nothing -> enrichError ("second branch typing error") 
-                                Just t2 -> let tif = lub t1 t2 in
-                                            if tif == Nothing
-                                                then enrichError ("impossible joint of if stm") 
-                                                else return tif
+            case mb of
+                Just b ->   if b<=TBool then
+                                case mt1 of 
+                                    Nothing -> enrichError ("first branch typing error") 
+                                    Just t1 -> case mt2 of 
+                                                    Nothing -> enrichError ("second branch typing error") 
+                                                    Just t2 -> let tif = lub t1 t2 in
+                                                                if tif == Nothing
+                                                                    then enrichError ("impossible joint of if stm") 
+                                                                    else return tif
+                            else enrichError("a correct boolean guard has not been provided") 
+                Nothing -> enrichError("impossible to type the guard") 
 
 
     typeOf ctx (ESum m1 m2) = 

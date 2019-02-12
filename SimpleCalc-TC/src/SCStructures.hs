@@ -23,7 +23,7 @@ module SCStructures where
         TNat <= TNat = True
         TBool <= TBool = True
         TArrow s1 s2  <= TArrow t1 t2 = (t1 <= s1) && (s2 <= t2)
-        _ < _ = False
+        _ <= _ = False
 
         s < t = (s<=t) && (s/=t)
         s > t = t < s 
