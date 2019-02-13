@@ -53,7 +53,7 @@ module InferenceTest (tests) where
 
     test10  = testCase "Inf10: if 4 then (fn x:Nat->Nat.(x 3))  else fn x:Nat->Nat .false" (assertEqual "" expected result)
         where 
-            expected = Just (TBool)
+            expected = Just (TArrow (TArrow TNat TNat) TBool)
             result = typeOfExe (ECond (ENum 3) ((Efn "x" (TArrow TNat TNat) (EAp (EVar "x") (ENum 3)))) ( (Efn "x" (TArrow TNat TNat) (EBool False))))
         
             
