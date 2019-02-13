@@ -4,7 +4,7 @@ module InferenceTest (tests) where
     import Test.Tasty
     import Test.Tasty.HUnit
 
-    tests = [test1,test2,test3, test4,test5,test6,test7,test8,test9]
+    tests = [test1,test2,test3, test4,test5,test6,test7,test8,test9,test10]
 
     test1  = testCase "Inf1: sum" (assertEqual "" expected result)
         where 
@@ -50,5 +50,10 @@ module InferenceTest (tests) where
         where 
             expected = Just (TArrow TNat TBool)
             result = typeOfExe (ECond (EBool True) (Efn "x" TBool (ENum 3)) (Efn "x" TNat (EBool True)))
+
+    test10  = testCase "Inf10: if 4 then (fn x:Nat->Nat.(x 3))  else fn x:Nat->Nat .false" (assertEqual "" expected result)
+        where 
+            expected = Just (TBool)
+            result = typeOfExe (ECond (ENum 3) ((Efn "x" (TArrow TNat TNat) (EAp (EVar "x") (ENum 3)))) ( (Efn "x" (TArrow TNat TNat) (EBool False))))
         
             
